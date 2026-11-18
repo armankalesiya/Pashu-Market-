@@ -1,0 +1,696 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Private user account profile containing PII, preferences, and account flags.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 20
+        },
+        "email": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 160
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "district": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "village": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "photoURL": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120000
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "suspended": {
+          "type": "boolean"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "admin"]
+        },
+        "language": {
+          "type": "string",
+          "enum": ["en", "hi"]
+        },
+        "termsAccepted": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "name", "state", "district", "verified", "suspended", "role", "termsAccepted", "createdAt", "updatedAt"]
+    },
+    "SellerPublic": {
+      "title": "SellerPublic",
+      "description": "Publicly readable seller card summary without private email or sensitive PII.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "photoURL": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120000
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "district": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "village": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "suspended": {
+          "type": "boolean"
+        },
+        "memberSince": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "name", "state", "district", "verified", "suspended", "memberSince", "updatedAt"]
+    },
+    "Animal": {
+      "title": "Animal",
+      "description": "Livestock listing document published by a registered seller.",
+      "type": "object",
+      "properties": {
+        "listingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sellerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sellerName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "sellerPhoto": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120000
+        },
+        "sellerVerified": {
+          "type": "boolean"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Cow", "Buffalo", "Goat", "Sheep", "Horse", "Camel", "Donkey", "Poultry", "Other Livestock"]
+        },
+        "breed": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "age": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "gender": {
+          "type": "string",
+          "enum": ["Female", "Male", "Pair / Group"]
+        },
+        "color": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "weight": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40
+        },
+        "milkCapacity": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40
+        },
+        "healthStatus": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "vaccinationStatus": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "pregnancyStatus": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 2000
+        },
+        "price": {
+          "type": "number"
+        },
+        "negotiable": {
+          "type": "boolean"
+        },
+        "photos": {
+          "type": "array"
+        },
+        "videoURL": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1024
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "district": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "village": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "locationDescription": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 300
+        },
+        "contactNumber": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 20
+        },
+        "whatsappEnabled": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["ACTIVE", "SOLD", "INACTIVE", "HIDDEN"]
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "views": {
+          "type": "number"
+        },
+        "publishedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["listingId", "sellerId", "sellerName", "category", "breed", "age", "gender", "color", "healthStatus", "vaccinationStatus", "description", "price", "negotiable", "photos", "state", "district", "village", "contactNumber", "status", "featured", "views", "publishedAt", "updatedAt"]
+    },
+    "Favourite": {
+      "title": "Favourite",
+      "description": "User saved livestock listing reference.",
+      "type": "object",
+      "properties": {
+        "favouriteId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "listingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["favouriteId", "userId", "listingId", "createdAt"]
+    },
+    "Enquiry": {
+      "title": "Enquiry",
+      "description": "Private buyer-to-seller enquiry and reply thread tied to a listing.",
+      "type": "object",
+      "properties": {
+        "enquiryId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "listingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "listingTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "listingPhoto": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 250000
+        },
+        "buyerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "buyerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "buyerPhone": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 20
+        },
+        "sellerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sellerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "message": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 1000
+        },
+        "reply": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "contactRequested": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["OPEN", "REPLIED", "RESOLVED"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["enquiryId", "listingId", "listingTitle", "buyerId", "buyerName", "sellerId", "sellerName", "message", "contactRequested", "status", "createdAt", "updatedAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification or platform-wide announcement.",
+      "type": "object",
+      "properties": {
+        "notificationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "senderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["NEW_ENQUIRY", "NEW_MESSAGE", "LISTING_PUBLISHED", "LISTING_SOLD", "LISTING_UPDATED", "ADMIN_ANNOUNCEMENT"]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "relatedId": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128
+        },
+        "read": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["notificationId", "userId", "senderId", "type", "title", "body", "read", "createdAt"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Abuse or policy violation report submitted for a listing.",
+      "type": "object",
+      "properties": {
+        "reportId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "listingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "listingTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "reporterId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "details": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "status": {
+          "type": "string",
+          "enum": ["OPEN", "REVIEWED", "DISMISSED", "ACTION_TAKEN"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["reportId", "listingId", "listingTitle", "reporterId", "reason", "status", "createdAt", "updatedAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Livestock category managed by platform admins.",
+      "type": "object",
+      "properties": {
+        "categoryId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "nameEn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "nameHi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "slug": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "order": {
+          "type": "number"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "imageUrl": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1024
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["categoryId", "nameEn", "nameHi", "slug", "order", "active", "updatedAt"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Buyer rating and review of a seller.",
+      "type": "object",
+      "properties": {
+        "reviewId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sellerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "reviewerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "reviewerName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "listingId": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128
+        },
+        "rating": {
+          "type": "number"
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 600
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["reviewId", "sellerId", "reviewerId", "reviewerName", "rating", "comment", "createdAt"]
+    },
+    "AppSetting": {
+      "title": "AppSetting",
+      "description": "Global platform configuration and announcements.",
+      "type": "object",
+      "properties": {
+        "settingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "announcementTitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 160
+        },
+        "announcementBody": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 600
+        },
+        "announcementActive": {
+          "type": "boolean"
+        },
+        "supportPhone": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 30
+        },
+        "supportEmail": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 160
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["settingId", "announcementActive", "updatedAt"]
+    },
+    "AdminMarker": {
+      "title": "AdminMarker",
+      "description": "Server-controlled admin authorization record.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 160
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Private user profile documents (owner and admin read/write only)."
+    },
+    "/sellers/{sellerId}": {
+      "schema": { "$ref": "#/entities/SellerPublic" },
+      "description": "Public seller profile summary for listing cards and seller detail views."
+    },
+    "/animals/{listingId}": {
+      "schema": { "$ref": "#/entities/Animal" },
+      "description": "Livestock listings visible publicly when ACTIVE, and manageable by owner or admin."
+    },
+    "/favourites/{favouriteId}": {
+      "schema": { "$ref": "#/entities/Favourite" },
+      "description": "User saved animal listings, strictly private to owning user."
+    },
+    "/enquiries/{enquiryId}": {
+      "schema": { "$ref": "#/entities/Enquiry" },
+      "description": "Private buyer-seller enquiries visible only to buyerId, sellerId, and admins."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Per-user notifications and admin announcements."
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/Report" },
+      "description": "User-submitted listing reports reviewed by admins."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Platform livestock categories."
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/Review" },
+      "description": "Buyer reviews of sellers."
+    },
+    "/appSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/AppSetting" },
+      "description": "Global platform announcements and settings."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminMarker" },
+      "description": "Authorized platform administrators."
+    }
+  }
+}

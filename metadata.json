@@ -1,0 +1,8 @@
+{
+  "name": "PASHU MARKET",
+  "description": "PASHU MARKET — India's Livestock Marketplace. Buy and sell cows, buffaloes, goats, sheep, horses, camels, donkeys, and poultry directly with verified Indian farmers and dairy owners.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

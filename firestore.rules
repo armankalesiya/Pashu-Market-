@@ -1,0 +1,537 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && (
+        request.auth.token.email_verified == true ||
+        (request.auth.token.phone_number is string && request.auth.token.phone_number.size() >= 8)
+      );
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email == 'armankalesiya@gmail.com' &&
+        request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (
+        isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isNotSuspended() {
+      return !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.suspended == false;
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'name', 'state', 'district', 'verified', 'suspended', 'role', 'termsAccepted', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'name', 'phone', 'email', 'state', 'district', 'village', 'photoURL', 'verified', 'suspended', 'role', 'language', 'termsAccepted', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && isValidString(data.name, 2, 100)
+        && (!('phone' in data) || isValidString(data.phone, 0, 20))
+        && (!('email' in data) || isValidString(data.email, 0, 160))
+        && isValidString(data.state, 1, 80)
+        && isValidString(data.district, 1, 80)
+        && (!('village' in data) || isValidString(data.village, 0, 120))
+        && (!('photoURL' in data) || isValidString(data.photoURL, 0, 120000))
+        && data.verified is bool
+        && data.suspended is bool
+        && data.role in ['user', 'admin']
+        && (!('language' in data) || data.language in ['en', 'hi'])
+        && data.termsAccepted is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSeller(data) {
+      return data.keys().hasAll(['uid', 'name', 'state', 'district', 'verified', 'suspended', 'memberSince', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'name', 'photoURL', 'state', 'district', 'village', 'verified', 'suspended', 'memberSince', 'updatedAt'])
+        && isValidId(data.uid)
+        && isValidString(data.name, 2, 100)
+        && (!('photoURL' in data) || isValidString(data.photoURL, 0, 120000))
+        && isValidString(data.state, 1, 80)
+        && isValidString(data.district, 1, 80)
+        && (!('village' in data) || isValidString(data.village, 0, 120))
+        && data.verified is bool
+        && data.suspended is bool
+        && data.memberSince is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAnimal(data) {
+      return data.keys().hasAll([
+        'listingId', 'sellerId', 'sellerName', 'category', 'breed', 'age', 'gender',
+        'color', 'healthStatus', 'vaccinationStatus', 'description', 'price',
+        'negotiable', 'photos', 'state', 'district', 'village', 'contactNumber',
+        'status', 'featured', 'views', 'publishedAt', 'updatedAt'
+      ])
+        && data.keys().hasOnly([
+          'listingId', 'sellerId', 'sellerName', 'sellerPhoto', 'sellerVerified',
+          'category', 'breed', 'age', 'gender', 'color', 'weight', 'milkCapacity',
+          'healthStatus', 'vaccinationStatus', 'pregnancyStatus', 'description',
+          'price', 'negotiable', 'photos', 'videoURL', 'state', 'district',
+          'village', 'locationDescription', 'contactNumber', 'whatsappEnabled',
+          'status', 'featured', 'views', 'publishedAt', 'updatedAt'
+        ])
+        && isValidId(data.listingId)
+        && isValidId(data.sellerId)
+        && isValidString(data.sellerName, 2, 100)
+        && (!('sellerPhoto' in data) || isValidString(data.sellerPhoto, 0, 120000))
+        && (!('sellerVerified' in data) || data.sellerVerified is bool)
+        && data.category in ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Horse', 'Camel', 'Donkey', 'Poultry', 'Other Livestock']
+        && isValidString(data.breed, 2, 80)
+        && isValidString(data.age, 1, 40)
+        && data.gender in ['Female', 'Male', 'Pair / Group']
+        && isValidString(data.color, 1, 60)
+        && (!('weight' in data) || isValidString(data.weight, 0, 40))
+        && (!('milkCapacity' in data) || isValidString(data.milkCapacity, 0, 40))
+        && isValidString(data.healthStatus, 2, 120)
+        && isValidString(data.vaccinationStatus, 2, 120)
+        && (!('pregnancyStatus' in data) || isValidString(data.pregnancyStatus, 0, 80))
+        && isValidString(data.description, 10, 2000)
+        && data.price is number && data.price > 0 && data.price <= 50000000
+        && data.negotiable is bool
+        && data.photos is list && data.photos.size() >= 1 && data.photos.size() <= 10
+        && isValidString(data.photos[0], 1, 250000)
+        && (!('videoURL' in data) || isValidString(data.videoURL, 0, 1024))
+        && isValidString(data.state, 1, 80)
+        && isValidString(data.district, 1, 80)
+        && isValidString(data.village, 1, 120)
+        && (!('locationDescription' in data) || isValidString(data.locationDescription, 0, 300))
+        && isValidString(data.contactNumber, 8, 20)
+        && (!('whatsappEnabled' in data) || data.whatsappEnabled is bool)
+        && data.status in ['ACTIVE', 'SOLD', 'INACTIVE', 'HIDDEN']
+        && data.featured is bool
+        && data.views is number && data.views >= 0
+        && data.publishedAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidFavourite(data) {
+      return data.keys().hasAll(['favouriteId', 'userId', 'listingId', 'createdAt'])
+        && data.keys().hasOnly(['favouriteId', 'userId', 'listingId', 'createdAt'])
+        && isValidId(data.favouriteId)
+        && isValidId(data.userId)
+        && isValidId(data.listingId)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidEnquiry(data) {
+      return data.keys().hasAll(['enquiryId', 'listingId', 'listingTitle', 'buyerId', 'buyerName', 'sellerId', 'sellerName', 'message', 'contactRequested', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['enquiryId', 'listingId', 'listingTitle', 'listingPhoto', 'buyerId', 'buyerName', 'buyerPhone', 'sellerId', 'sellerName', 'message', 'reply', 'contactRequested', 'status', 'createdAt', 'updatedAt'])
+        && isValidId(data.enquiryId)
+        && isValidId(data.listingId)
+        && isValidString(data.listingTitle, 1, 160)
+        && (!('listingPhoto' in data) || isValidString(data.listingPhoto, 0, 250000))
+        && isValidId(data.buyerId)
+        && isValidString(data.buyerName, 1, 100)
+        && (!('buyerPhone' in data) || isValidString(data.buyerPhone, 0, 20))
+        && isValidId(data.sellerId)
+        && isValidString(data.sellerName, 1, 100)
+        && isValidString(data.message, 2, 1000)
+        && (!('reply' in data) || isValidString(data.reply, 0, 1000))
+        && data.contactRequested is bool
+        && data.status in ['OPEN', 'REPLIED', 'RESOLVED']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['notificationId', 'userId', 'senderId', 'type', 'title', 'body', 'read', 'createdAt'])
+        && data.keys().hasOnly(['notificationId', 'userId', 'senderId', 'type', 'title', 'body', 'relatedId', 'read', 'createdAt'])
+        && isValidId(data.notificationId)
+        && isValidId(data.userId)
+        && isValidId(data.senderId)
+        && data.type in ['NEW_ENQUIRY', 'NEW_MESSAGE', 'LISTING_PUBLISHED', 'LISTING_SOLD', 'LISTING_UPDATED', 'ADMIN_ANNOUNCEMENT']
+        && isValidString(data.title, 1, 160)
+        && isValidString(data.body, 1, 600)
+        && (!('relatedId' in data) || isValidString(data.relatedId, 0, 128))
+        && data.read is bool
+        && data.createdAt is timestamp;
+    }
+
+    function isValidReport(data) {
+      return data.keys().hasAll(['reportId', 'listingId', 'listingTitle', 'reporterId', 'reason', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['reportId', 'listingId', 'listingTitle', 'reporterId', 'reason', 'details', 'status', 'createdAt', 'updatedAt'])
+        && isValidId(data.reportId)
+        && isValidId(data.listingId)
+        && isValidString(data.listingTitle, 1, 160)
+        && isValidId(data.reporterId)
+        && isValidString(data.reason, 2, 120)
+        && (!('details' in data) || isValidString(data.details, 0, 1000))
+        && data.status in ['OPEN', 'REVIEWED', 'DISMISSED', 'ACTION_TAKEN']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['categoryId', 'nameEn', 'nameHi', 'slug', 'order', 'active', 'updatedAt'])
+        && data.keys().hasOnly(['categoryId', 'nameEn', 'nameHi', 'slug', 'order', 'active', 'imageUrl', 'updatedAt'])
+        && isValidId(data.categoryId)
+        && isValidString(data.nameEn, 1, 60)
+        && isValidString(data.nameHi, 1, 60)
+        && isValidString(data.slug, 1, 60)
+        && data.order is number && data.order >= 0 && data.order <= 1000
+        && data.active is bool
+        && (!('imageUrl' in data) || isValidString(data.imageUrl, 0, 1024))
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['reviewId', 'sellerId', 'reviewerId', 'reviewerName', 'rating', 'comment', 'createdAt'])
+        && data.keys().hasOnly(['reviewId', 'sellerId', 'reviewerId', 'reviewerName', 'listingId', 'rating', 'comment', 'createdAt'])
+        && isValidId(data.reviewId)
+        && isValidId(data.sellerId)
+        && isValidId(data.reviewerId)
+        && isValidString(data.reviewerName, 2, 100)
+        && (!('listingId' in data) || isValidString(data.listingId, 0, 128))
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && isValidString(data.comment, 2, 600)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAppSetting(data) {
+      return data.keys().hasAll(['settingId', 'announcementActive', 'updatedAt'])
+        && data.keys().hasOnly(['settingId', 'announcementTitle', 'announcementBody', 'announcementActive', 'supportPhone', 'supportEmail', 'updatedAt'])
+        && isValidId(data.settingId)
+        && (!('announcementTitle' in data) || isValidString(data.announcementTitle, 0, 160))
+        && (!('announcementBody' in data) || isValidString(data.announcementBody, 0, 600))
+        && data.announcementActive is bool
+        && (!('supportPhone' in data) || isValidString(data.supportPhone, 0, 30))
+        && (!('supportEmail' in data) || isValidString(data.supportEmail, 0, 160))
+        && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.uid == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidUser(incoming())
+        && incoming().uid == userId
+        && incoming().verified == false
+        && incoming().suspended == false
+        && incoming().role == 'user'
+        && incoming().termsAccepted == true
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) && isSignedIn() && isValidUser(incoming()) && (
+        (
+          isAdmin()
+          && incoming().uid == existing().uid
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['verified', 'suspended', 'role', 'updatedAt'])
+        ) || (
+          isOwner(userId)
+          && isVerifiedUser()
+          && existing().suspended == false
+          && incoming().uid == existing().uid
+          && incoming().verified == existing().verified
+          && incoming().suspended == existing().suspended
+          && incoming().role == existing().role
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'email', 'state', 'district', 'village', 'photoURL', 'language', 'updatedAt'])
+        )
+      );
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    match /sellers/{sellerId} {
+      allow get: if isValidId(sellerId) && (existing().suspended == false || isOwner(sellerId) || isAdmin());
+      allow list: if resource.data.suspended == false || isBootstrappedAdmin();
+      allow create: if isValidId(sellerId)
+        && isVerifiedUser()
+        && isOwner(sellerId)
+        && isValidSeller(incoming())
+        && incoming().uid == sellerId
+        && incoming().verified == false
+        && incoming().suspended == false
+        && incoming().memberSince == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(sellerId) && isSignedIn() && isValidSeller(incoming()) && (
+        (
+          isAdmin()
+          && incoming().uid == existing().uid
+          && incoming().memberSince == existing().memberSince
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['verified', 'suspended', 'updatedAt'])
+        ) || (
+          isOwner(sellerId)
+          && isVerifiedUser()
+          && existing().suspended == false
+          && incoming().uid == existing().uid
+          && incoming().verified == existing().verified
+          && incoming().suspended == existing().suspended
+          && incoming().memberSince == existing().memberSince
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'photoURL', 'state', 'district', 'village', 'updatedAt'])
+        )
+      );
+      allow delete: if isValidId(sellerId) && isAdmin();
+    }
+
+    match /animals/{listingId} {
+      allow get: if isValidId(listingId) && (
+        existing().status == 'ACTIVE' ||
+        isOwner(existing().sellerId) ||
+        isAdmin()
+      );
+      allow list: if resource.data.status == 'ACTIVE' ||
+        (isSignedIn() && resource.data.sellerId == request.auth.uid) ||
+        isBootstrappedAdmin();
+      allow create: if isValidId(listingId)
+        && isVerifiedUser()
+        && isNotSuspended()
+        && isValidAnimal(incoming())
+        && incoming().listingId == listingId
+        && incoming().sellerId == request.auth.uid
+        && incoming().sellerVerified == false
+        && incoming().status == 'ACTIVE'
+        && incoming().featured == false
+        && incoming().views == 0
+        && incoming().publishedAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(listingId) && isSignedIn() && isValidAnimal(incoming()) && (
+        (
+          isAdmin()
+          && incoming().listingId == existing().listingId
+          && incoming().sellerId == existing().sellerId
+          && incoming().publishedAt == existing().publishedAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'featured', 'sellerVerified', 'updatedAt'])
+        ) || (
+          isOwner(existing().sellerId)
+          && isVerifiedUser()
+          && isNotSuspended()
+          && existing().status != 'SOLD'
+          && existing().status != 'HIDDEN'
+          && incoming().listingId == existing().listingId
+          && incoming().sellerId == existing().sellerId
+          && incoming().sellerVerified == existing().sellerVerified
+          && incoming().featured == existing().featured
+          && incoming().publishedAt == existing().publishedAt
+          && incoming().updatedAt == request.time
+          && incoming().status in ['ACTIVE', 'SOLD', 'INACTIVE']
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'sellerName', 'sellerPhoto', 'category', 'breed', 'age', 'gender',
+            'color', 'weight', 'milkCapacity', 'healthStatus', 'vaccinationStatus',
+            'pregnancyStatus', 'description', 'price', 'negotiable', 'photos',
+            'videoURL', 'state', 'district', 'village', 'locationDescription',
+            'contactNumber', 'whatsappEnabled', 'status', 'updatedAt'
+          ])
+        ) || (
+          existing().status == 'ACTIVE'
+          && incoming().diff(existing()).affectedKeys().hasOnly(['views'])
+          && incoming().views == existing().views + 1
+        )
+      );
+      allow delete: if isValidId(listingId) && (isOwner(existing().sellerId) || isAdmin());
+    }
+
+    match /favourites/{favouriteId} {
+      allow get: if isValidId(favouriteId) && (isOwner(existing().userId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isValidId(favouriteId)
+        && isVerifiedUser()
+        && isValidFavourite(incoming())
+        && incoming().favouriteId == favouriteId
+        && incoming().userId == request.auth.uid
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/animals/$(incoming().listingId));
+      allow delete: if isValidId(favouriteId) && (isOwner(existing().userId) || isAdmin());
+    }
+
+    match /enquiries/{enquiryId} {
+      allow get: if isValidId(enquiryId) && (
+        isOwner(existing().buyerId) ||
+        isOwner(existing().sellerId) ||
+        isAdmin()
+      );
+      allow list: if isSignedIn() && (
+        resource.data.buyerId == request.auth.uid ||
+        resource.data.sellerId == request.auth.uid ||
+        isBootstrappedAdmin()
+      );
+      allow create: if isValidId(enquiryId)
+        && isVerifiedUser()
+        && isNotSuspended()
+        && isValidEnquiry(incoming())
+        && incoming().enquiryId == enquiryId
+        && incoming().buyerId == request.auth.uid
+        && incoming().buyerId != incoming().sellerId
+        && incoming().status == 'OPEN'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/animals/$(incoming().listingId));
+      allow update: if isValidId(enquiryId) && isSignedIn() && isValidEnquiry(incoming()) && (
+        (
+          isAdmin()
+          && incoming().enquiryId == existing().enquiryId
+          && incoming().buyerId == existing().buyerId
+          && incoming().sellerId == existing().sellerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'reply', 'updatedAt'])
+        ) || (
+          isOwner(existing().sellerId)
+          && existing().status != 'RESOLVED'
+          && incoming().enquiryId == existing().enquiryId
+          && incoming().listingId == existing().listingId
+          && incoming().buyerId == existing().buyerId
+          && incoming().sellerId == existing().sellerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().status in ['REPLIED', 'RESOLVED']
+          && incoming().diff(existing()).affectedKeys().hasOnly(['reply', 'status', 'updatedAt'])
+        ) || (
+          isOwner(existing().buyerId)
+          && existing().status != 'RESOLVED'
+          && incoming().enquiryId == existing().enquiryId
+          && incoming().listingId == existing().listingId
+          && incoming().buyerId == existing().buyerId
+          && incoming().sellerId == existing().sellerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().status == 'RESOLVED'
+          && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+        )
+      );
+      allow delete: if isValidId(enquiryId) && isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow get: if isValidId(notificationId) && (
+        isOwner(existing().userId) ||
+        existing().userId == 'ALL' ||
+        isAdmin()
+      );
+      allow list: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.userId == 'ALL' ||
+        isBootstrappedAdmin()
+      );
+      allow create: if isValidId(notificationId)
+        && isVerifiedUser()
+        && isValidNotification(incoming())
+        && incoming().notificationId == notificationId
+        && incoming().senderId == request.auth.uid
+        && incoming().read == false
+        && incoming().createdAt == request.time
+        && (
+          isAdmin() ||
+          (
+            incoming().userId != 'ALL' &&
+            incoming().type in ['NEW_ENQUIRY', 'NEW_MESSAGE', 'LISTING_PUBLISHED', 'LISTING_SOLD', 'LISTING_UPDATED']
+          )
+        );
+      allow update: if isValidId(notificationId)
+        && isSignedIn()
+        && isValidNotification(incoming())
+        && isOwner(existing().userId)
+        && incoming().notificationId == existing().notificationId
+        && incoming().userId == existing().userId
+        && incoming().senderId == existing().senderId
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+      allow delete: if isValidId(notificationId) && (isOwner(existing().userId) || isAdmin());
+    }
+
+    match /reports/{reportId} {
+      allow get: if isValidId(reportId) && (isOwner(existing().reporterId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.reporterId == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isValidId(reportId)
+        && isVerifiedUser()
+        && isValidReport(incoming())
+        && incoming().reportId == reportId
+        && incoming().reporterId == request.auth.uid
+        && incoming().status == 'OPEN'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/animals/$(incoming().listingId));
+      allow update: if isValidId(reportId)
+        && isAdmin()
+        && isValidReport(incoming())
+        && incoming().reportId == existing().reportId
+        && incoming().listingId == existing().listingId
+        && incoming().reporterId == existing().reporterId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if isValidId(reportId) && isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow get: if isValidId(categoryId) && (existing().active == true || isAdmin());
+      allow list: if resource.data.active == true || isBootstrappedAdmin();
+      allow create, update: if isValidId(categoryId)
+        && isAdmin()
+        && isValidCategory(incoming())
+        && incoming().categoryId == categoryId
+        && incoming().updatedAt == request.time;
+      allow delete: if isValidId(categoryId) && isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow get: if isValidId(reviewId);
+      allow list: if resource.data.rating >= 1 && resource.data.rating <= 5;
+      allow create: if isValidId(reviewId)
+        && isVerifiedUser()
+        && isValidReview(incoming())
+        && incoming().reviewId == reviewId
+        && incoming().reviewerId == request.auth.uid
+        && incoming().reviewerId != incoming().sellerId
+        && incoming().createdAt == request.time;
+      allow delete: if isValidId(reviewId) && (isOwner(existing().reviewerId) || isAdmin());
+    }
+
+    match /appSettings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if resource.data.settingId == 'global' || isBootstrappedAdmin();
+      allow create, update: if isValidId(settingId)
+        && isAdmin()
+        && isValidAppSetting(incoming())
+        && incoming().settingId == settingId
+        && incoming().updatedAt == request.time;
+      allow delete: if isValidId(settingId) && isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (isOwner(adminId) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create, update, delete: if isValidId(adminId) && isBootstrappedAdmin();
+    }
+  }
+}
