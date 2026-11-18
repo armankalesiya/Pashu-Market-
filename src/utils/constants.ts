@@ -14,16 +14,24 @@ export const BRAND_COLORS = {
   success: '#347A54',
 } as const;
 
+const BASE_PATH =
+  typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL
+    ? import.meta.env.BASE_URL
+    : '/';
+
+const assetUrl = (relativePath: string): string =>
+  `${BASE_PATH.replace(/\/?$/, '/')}${relativePath.replace(/^\/+/, '')}`;
+
 export const GENERATED_IMAGES = {
-  hero: '/src/assets/images/hero_indian_livestock_1794979139415.jpg',
-  cow: '/src/assets/images/animal_gir_cow_1794979139401.jpg',
-  buffalo: '/src/assets/images/animal_murrah_buffalo_1794979138182.jpg',
-  goat: '/src/assets/images/animal_jamunapari_goat_1794979138928.jpg',
-  horse: '/src/assets/images/animal_marwari_horse_1794979139409.jpg',
-  sheep: '/src/assets/images/animal_nellore_sheep_1794979139849.jpg',
-  camel: '/src/assets/images/animal_bikaneri_camel_1794979140425.jpg',
-  donkey: '/src/assets/images/animal_indian_donkey_1794979140557.jpg',
-  poultry: '/src/assets/images/animal_kadaknath_poultry_1794979142303.jpg',
+  hero: assetUrl('src/assets/images/hero_indian_livestock_1794979139415.jpg'),
+  cow: assetUrl('src/assets/images/animal_gir_cow_1794979139401.jpg'),
+  buffalo: assetUrl('src/assets/images/animal_murrah_buffalo_1794979138182.jpg'),
+  goat: assetUrl('src/assets/images/animal_jamunapari_goat_1794979138928.jpg'),
+  horse: assetUrl('src/assets/images/animal_marwari_horse_1794979139409.jpg'),
+  sheep: assetUrl('src/assets/images/animal_nellore_sheep_1794979139849.jpg'),
+  camel: assetUrl('src/assets/images/animal_bikaneri_camel_1794979140425.jpg'),
+  donkey: assetUrl('src/assets/images/animal_indian_donkey_1794979140557.jpg'),
+  poultry: assetUrl('src/assets/images/animal_kadaknath_poultry_1794979142303.jpg'),
 } as const;
 
 export const DEFAULT_CATEGORIES: CategoryConfig[] = [

@@ -3,11 +3,12 @@ export function registerServiceWorker(): void {
     return;
   }
 
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
+
   window.addEventListener('load', () => {
     navigator.serviceWorker
-      .register('/service-worker.js', { scope: '/' })
+      .register(`${base}service-worker.js`, { scope: base })
       .then((registration) => {
-        // Check for updated service worker silently on load
         registration.update().catch(() => {});
       })
       .catch(() => {

@@ -1,14 +1,17 @@
-const CACHE_VERSION = 'pashu-market-static-v1';
+const CACHE_VERSION = 'pashu-market-static-v2';
+
+const SCOPE_PATH = new URL(self.registration.scope).pathname.replace(/\/?$/, '/');
+const withScope = (p) => `${SCOPE_PATH}${String(p).replace(/^\/+/, '')}`;
 
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/apple-touch-icon.png',
-  '/icons/icon.svg',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-  '/icons/icon-maskable-512x512.png',
+  withScope(''),
+  withScope('index.html'),
+  withScope('manifest.json'),
+  withScope('apple-touch-icon.png'),
+  withScope('icons/icon.svg'),
+  withScope('icons/icon-192x192.png'),
+  withScope('icons/icon-512x512.png'),
+  withScope('icons/icon-maskable-512x512.png'),
 ];
 
 const BYPASS_HOSTS = [
@@ -56,7 +59,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // Never cache non-GET requests (POST, PUT, DELETE, etc.) or authenticated headers
+  // Never cache non-GET requests or authorized requests
   if (request.method !== 'GET') return;
   if (request.headers && request.headers.has('Authorization')) return;
 
@@ -67,15 +70,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Only handle http(s) requests
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 
-  // Never cache Firebase Auth, Firestore, Storage, Google OAuth, or backend APIs
+  // Never cache Firebase Auth, Firestore, Storage, Google OAuth, or external APIs
   if (BYPASS_HOSTS.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`))) {
     return;
   }
 
-  // Handle Google Fonts gracefully with Cache-First
+  // Cache-First for Google Fonts
   if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {
     event.respondWith(
       caches.open(CACHE_VERSION).then(async (cache) => {
@@ -91,16 +93,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip all other cross-origin requests (external APIs, third-party scripts, etc.)
+  // Skip all other cross-origin requests
   if (url.origin !== self.location.origin) {
     return;
   }
 
-  // Never cache API routes, auth handlers, or Vite dev-mode HMR modules
+  // Never cache APIs, auth endpoints, or Vite dev HMR internals
   if (
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/__/auth/') ||
     url.pathname.startsWith('/__/firebase/') ||
+    url.pathname.startsWith(withScope('api/')) ||
+    url.pathname.startsWith(withScope('__/auth/')) ||
     url.pathname.startsWith('/@vite/') ||
     url.pathname.startsWith('/@react-refresh') ||
     url.pathname.startsWith('/node_modules/')
@@ -113,27 +117,26 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response && response.ok && url.pathname === '/') {
+          if (response && response.ok && (url.pathname === SCOPE_PATH || url.pathname === withScope('index.html'))) {
             const copy = response.clone();
-            caches.open(CACHE_VERSION).then((cache) => cache.put('/index.html', copy)).catch(() => {});
+            caches.open(CACHE_VERSION).then((cache) => cache.put(withScope('index.html'), copy)).catch(() => {});
           }
           return response;
         })
         .catch(async () => {
           const cache = await caches.open(CACHE_VERSION);
-          return (await cache.match('/index.html')) || (await cache.match('/'));
+          return (await cache.match(withScope('index.html'))) || (await cache.match(withScope('')));
         })
     );
     return;
   }
 
-  // Only cache immutable/public static assets (bundles under /assets/, public icons/images, static files)
-  const isProdBundle = url.pathname.startsWith('/assets/');
+  const isProdBundle = url.pathname.startsWith(withScope('assets/'));
   const isPublicAsset =
-    url.pathname.startsWith('/icons/') ||
-    url.pathname.startsWith('/src/assets/') ||
-    url.pathname === '/manifest.json' ||
-    url.pathname === '/apple-touch-icon.png';
+    url.pathname.startsWith(withScope('icons/')) ||
+    url.pathname.startsWith(withScope('src/assets/')) ||
+    url.pathname === withScope('manifest.json') ||
+    url.pathname === withScope('apple-touch-icon.png');
   const isStaticAsset = STATIC_EXT_RE.test(url.pathname);
 
   if (!isProdBundle && !isPublicAsset && !isStaticAsset) {
